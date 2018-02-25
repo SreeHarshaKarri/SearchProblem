@@ -3,106 +3,97 @@ import math
 allnodes = {}
 
 # function to calculate distance between two points in a map
-# This function can be called for various path evaluation
 def distance_calculator(origin, dest, allnodes):
     point_a = allnodes[origin]
     point_b = allnodes[dest]   
     return((((point_a[1] - point_b[1])**2) + ((point_a[0] - point_b[0])**2))**0.5)
 
-# function to compute the shortest path
 def shortest_path(M,start,goal):
     # initial set and dictionary declaration
     adjoining = list()
-    adjoining_new = list()
     pathcost = {}
-    pathcost_new = list()
     heuristic = {}
-    heuristic_new = {}
-    explored = list()
-    pathtobetraversed = list()
+    frontier = set()
+    explored = set()
+    pathtobetraversed = set()
     minimumpath = {}
     costofpath = {}
-    costofpath_new = {}
     interim_costofpath = {}
     prevpathcost = 0
     
     # to get all nodes in the map
     allnodes = M.intersections
        
-    # working on the explored path
-    pathtobetraversed.append(start)
-    explored.append(start)
+    # working on the three parameters of search problem; frontier, explored and unexplored
+    frontier.add(start)
+    pathtobetraversed.add(start)
+    explored.add(start)
     prevnode = start
+    currentnode = start
     
     # starting off from the start node
     # all nodes connected to start node shall be appended to the explored node list
-    while(start != goal):
+    while(len(explored)):
         adjoining  = M.roads[start]
         print("Adjoining nodes", adjoining)
-               
-        # compute distance between each of the adjoining nodes to the current node is pathcost
-        # distance between any given point(adjoining) and the end point(goal) is the heuristic    
-        prevnodecost = distance_calculator(start, prevnode, allnodes)
-        print("Previous path cost", prevnodecost)
-        prevpathcost += prevnodecost
-        print("Previous path cost, cummulative", prevpathcost)
-    
+        
+    # add the adjoining nodes to explored set if adjoining nodes is not explored
+        for l in range(len(adjoining)):
+            if(adjoining[l]) in explored:
+                # the neighbor node is already reached, ignore this node
+            else:
+                explored.add(adjoining[l])
+                
+        print("Explored list after neighbor nodes checked", explored)
+        
+        # the cost of path traversed so far
+        prevpathcost = distance_calculator(currentnode, prevnode, allnodes)
+        print(" The cost of the path traversed so far is ", prevpathcost)
+                   
         for i in range(len(adjoining)):
-            pathcost[adjoining[i]] = distance_calculator(start, adjoining[i], allnodes)
+            pathcost[adjoining[i]] = distance_calculator(current, adjoining[i], allnodes) + prevpathcost
             heuristic[adjoining[i]] = distance_calculator(adjoining[i], goal, allnodes)
-            costofpath[adjoining[i]] = pathcost[adjoining[i]] + heuristic[adjoining[i]] + prevpathcost
+            costofpath[adjoining[i]] = pathcost[adjoining[i]] + heuristic[adjoining[i]]
         
         nextnode = min(costofpath, key=costofpath.get) 
         interim_costofpath = costofpath
-
-        # use of print statements to debug             
-        #print("Path cost", pathcost)
-        #print("Heuristic cost", heuristic)
+        
+        print("Path cost", pathcost)
+        print("Heuristic cost", heuristic)
         print("Cost of paths", costofpath)
         print("Explored list", explored)
         print("Next node", nextnode)
+        print("Length of previous path", len(pathtobetraversed))
         print("Cost of interim path", interim_costofpath)
         
+    # check if the minimum cost path is among the explored list already
+#        for j in range(len(pathtobetraversed)):
+#             if(nextnode == pathtobetraversed[j]):
+#                 print("deleting an item 1")
+#                 del interim_costofpath[pathtobetraversed[j]]
+#                 nextnode = min(interim_costofpath, key=interim_costofpath.get) 
+
         for j in range(len(pathtobetraversed)):
             if(nextnode in pathtobetraversed):
                 del interim_costofpath[nextnode]
                 nextnode = min(interim_costofpath, key=interim_costofpath.get) 
                 
         print(" Cost of interim path after deleting previous traversed nodes", interim_costofpath)
+        #nextnode = min(interim_costofpath, key=interim_costofpath.get) 
                 
-        # updating the explored path
+    # updating the explored path
         for k in range(len(adjoining)):
-            explored.append(adjoining[k])
+            explored.add(adjoining[k])
+            #frontier.append(adjoining[k])
         
-        print("Explored list", explored)  
-        
-        # to check for the shortest possible path
-#         for l in range(len(explored)):
-#             if(nextnode == explored[l]):
-#                 adjoining_new = M.roads[nextnode]
-#                 print("New adjoining nodes are", adjoining_new)
-               
-#         if(len(pathtobetraversed) > 1):
-#             for m in range(len(adjoining_new)):
-#                 pathcost_new[adjoining_new[m]] =  distance_calculator(nextnode, adjoining_new[m], allnodes)
-#                 heuristic_new[adjoining_new[m]] = distance_calculator(adjoining_new[m], goal, allnodes)
-#                 costofpath_new[adjoining_new[m]] = pathcost_new[adjoining_new[m]] + heuristic_new[adjoining_new[m]]
-            
-#             nextnode_new = min(costofpath_new, key=costofpath_new.get)
-#             print("The new next node is", nextnode_new)
-#             print("The new path costs are", costofpath_new)
-                                           
-        pathtobetraversed.append(nextnode)
+        print("Explored list", explored)                
+        pathtobetraversed.add(nextnode)
         print("Path to be traversed is", pathtobetraversed)
         
-        # re-initializing the variables i, j, k, l, m
+        # re-initializing the variables i, j, k
         i = 0
         j = 0
         k = 0
-        l = 0
-        m = 0
-        
-        # re-initializing the start and previous node for this iteration
         prevnode = start
         start = nextnode
         print(" The previous node and the start node are", prevnode, start)
